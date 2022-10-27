@@ -17,14 +17,9 @@ use ui::state::State;
 
 use std::path::Path;
 
-
-
-
 use ui::textfield::TextField;
 
 use anyhow::Result;
-
-
 
 fn setup_gl() -> Result<(
     gl::Gl,
@@ -65,10 +60,6 @@ fn run() -> Result<()> {
     let text_field = TextField::new(&res, &gl, viewport.w as u32, viewport.h as u32)?;
     let mut state = State::new(text_field, processor);
 
-    // setup_listeners(&mut text_field, &processor);
-    // state.on_enter(Component::Processor);
-    // state.on_print(Component::TextField);
-
     state.init();
 
     el.run(move |event, _, control_flow| {
@@ -92,7 +83,6 @@ fn run() -> Result<()> {
         state.render(&gl);
 
         gl_context.swap_buffers().unwrap();
-        // processor.update();
     });
 }
 

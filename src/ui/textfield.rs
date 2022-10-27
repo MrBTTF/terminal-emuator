@@ -14,7 +14,7 @@ pub struct TextField {
     cursor: Cursor,
     input_position: u32,
     prefix: String,
-    pub input_event: Vec<InputEvent>,
+    input_event: Vec<InputEvent>,
 }
 
 impl TextField {
@@ -44,10 +44,6 @@ impl TextField {
             input_event: vec![],
         })
     }
-
-    // pub fn init(&mut self, input_event: Box<Option<InputEvent>>) {
-    //     self.input_event = input_event;
-    // }
 
     fn cursor_on_first_subline(&self) -> bool {
         if let Some(last_line) = self.textdisplay.lines().last() {
@@ -153,6 +149,14 @@ impl TextField {
         }
     }
 
+    pub fn next_event(&mut self) -> Option<InputEvent> {
+        let e = self.input_event.first().cloned();
+        if e.is_some() {
+            self.input_event.remove(0);
+        }
+        e
+    }
+
     fn move_cursor_to_end(&mut self) {
         if self.textdisplay.get_line_width() == 0 {
             return;
@@ -171,13 +175,3 @@ impl TextField {
         }
     }
 }
-
-// impl EventActor for TextField {
-//     fn set_event_sender(&mut self, event_sender: EventSender) {
-//         self.event_sender = Some(event_sender);
-//     }
-
-//     fn set_event_receiver(&mut self, event_receiver: Mutex<EventReceiver>) {
-//         self.event_receiver = Some(event_receiver);
-//     }
-// }

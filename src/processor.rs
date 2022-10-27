@@ -3,7 +3,7 @@ use crate::ui::state::{InputEvent, OutputEvent};
 pub struct Processor {
     username: String,
     directory: String,
-    pub output_event: Vec<OutputEvent>,
+    output_event: Vec<OutputEvent>,
 }
 
 impl Processor {
@@ -33,6 +33,14 @@ impl Processor {
                 self.print_prefix();
             }
         }
+    }
+
+    pub fn next_event(&mut self) -> Option<OutputEvent> {
+        let e = self.output_event.first().cloned();
+        if e.is_some() {
+            self.output_event.remove(0);
+        }
+        e
     }
 
     fn process(&mut self, s: &str) {
@@ -83,13 +91,3 @@ impl Default for Processor {
         Self::new()
     }
 }
-
-// impl EventActor for Processor {
-//     fn set_event_sender(&mut self, event_sender: EventSender) {
-//         self.event_sender = Some(event_sender);
-//     }
-
-//     fn set_event_receiver(&mut self, event_receiver: Mutex<EventReceiver>) {
-//         self.event_receiver = Some(event_receiver);
-//     }
-// }
