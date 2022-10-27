@@ -1,9 +1,3 @@
-use std::thread;
-use std::{
-    sync::Mutex,
-    sync::{mpsc, Arc, Weak},
-};
-
 use gl::Gl;
 
 use crate::processor::Processor;

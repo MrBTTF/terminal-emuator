@@ -16,15 +16,15 @@ use resources::Resources;
 use ui::state::State;
 
 use std::path::Path;
-use std::sync::Arc;
-use std::sync::Mutex;
-use std::thread;
+
+
+
 
 use ui::textfield::TextField;
 
 use anyhow::Result;
 
-use crate::ui::state::Component;
+
 
 fn setup_gl() -> Result<(
     gl::Gl,

@@ -1,14 +1,9 @@
-use std::{
-    sync::Mutex,
-    sync::{mpsc, Weak},
-};
-
 use glutin::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
 
 use crate::{graphics::cursor::Cursor, resources::Resources};
 
 use super::{
-    state::{Event, InputEvent, OutputEvent},
+    state::{InputEvent, OutputEvent},
     textdisplay::TextDisplay,
 };
 

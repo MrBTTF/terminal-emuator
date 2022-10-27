@@ -1,12 +1,4 @@
-use std::{
-    sync::Arc,
-    sync::Mutex,
-    sync::{mpsc, Weak},
-    thread,
-    time::Duration,
-};
-
-use crate::ui::state::{Event, InputEvent, OutputEvent};
+use crate::ui::state::{InputEvent, OutputEvent};
 
 pub struct Processor {
     username: String,
@@ -83,6 +75,12 @@ impl Processor {
         // println!("Sending {:?}", e);
         self.output_event.push(e);
         // println!("Sent {:?}", e);
+    }
+}
+
+impl Default for Processor {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
