@@ -66,10 +66,10 @@ fn run() -> Result<()> {
     let mut state = State::new(text_field, processor);
 
     // setup_listeners(&mut text_field, &processor);
-    state.on_enter(Component::Processor);
-    state.on_print(Component::TextField);
+    // state.on_enter(Component::Processor);
+    // state.on_print(Component::TextField);
 
-    state.run();
+    state.init();
 
     el.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;

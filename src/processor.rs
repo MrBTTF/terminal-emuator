@@ -6,44 +6,41 @@ use std::{
     time::Duration,
 };
 
-use crate::ui::state::{Event, EventActor, EventReceiver, EventSender, InputEvent, OutputEvent};
+use crate::ui::state::{Event, InputEvent, OutputEvent};
 
 pub struct Processor {
-    event_sender: Option<EventSender>,
-    event_receiver: Option<Mutex<EventReceiver>>,
     username: String,
     directory: String,
+    pub output_event: Vec<OutputEvent>,
 }
 
 impl Processor {
     pub fn new() -> Self {
         let username = "user".to_string();
         let directory = "/".to_string();
-        Processor { event_sender: None, event_receiver: None, username, directory }
+
+        Processor { username, directory, output_event: vec![] }
     }
 
     pub fn init(&mut self) {
+        // self.output_event = output_event;
+
         println!("Running processor");
         self.println("Welcome".to_string());
         self.print_prefix();
     }
 
-    pub fn update(&mut self) {
-        let r = self.event_receiver.as_ref().unwrap().lock().unwrap().try_recv();
-        if let Ok(event) = r {
-            // println!("{:?}", event);
+    pub fn update(&mut self, event: InputEvent) {
+        // println!("{:?}", event);
 
-            if let Event::InputEvent(ie) = event {
-                match ie {
-                    InputEvent::UserText(s) => {
-                        println!("User entered: {}", s);
-                        self.process(&s);
-                        self.send_event(OutputEvent::Newline);
-                        self.print_prefix();
-                    }
-                }
+        match event {
+            InputEvent::UserText(s) => {
+                println!("User entered: {}", s);
+                self.process(&s);
+                self.send_event(OutputEvent::Newline);
+                self.print_prefix();
             }
-        };
+        }
     }
 
     fn process(&mut self, s: &str) {
@@ -84,23 +81,17 @@ impl Processor {
 
     fn send_event(&mut self, e: OutputEvent) {
         // println!("Sending {:?}", e);
-        self.event_sender.as_ref().unwrap().send(Event::OutputEvent(e));
+        self.output_event.push(e);
         // println!("Sent {:?}", e);
     }
 }
 
-impl Default for Processor {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+// impl EventActor for Processor {
+//     fn set_event_sender(&mut self, event_sender: EventSender) {
+//         self.event_sender = Some(event_sender);
+//     }
 
-impl EventActor for Processor {
-    fn set_event_sender(&mut self, event_sender: EventSender) {
-        self.event_sender = Some(event_sender);
-    }
-
-    fn set_event_receiver(&mut self, event_receiver: Mutex<EventReceiver>) {
-        self.event_receiver = Some(event_receiver);
-    }
-}
+//     fn set_event_receiver(&mut self, event_receiver: Mutex<EventReceiver>) {
+//         self.event_receiver = Some(event_receiver);
+//     }
+// }

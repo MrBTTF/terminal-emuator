@@ -8,7 +8,7 @@ use glutin::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
 use crate::{graphics::cursor::Cursor, resources::Resources};
 
 use super::{
-    state::{Event, EventActor, EventReceiver, EventSender, InputEvent, OutputEvent},
+    state::{Event, InputEvent, OutputEvent},
     textdisplay::TextDisplay,
 };
 
@@ -19,9 +19,7 @@ pub struct TextField {
     cursor: Cursor,
     input_position: u32,
     prefix: String,
-    event_sender: Option<EventSender>,
-    event_receiver: Option<Mutex<EventReceiver>>,
-    user_input: Option<String>,
+    pub input_event: Vec<InputEvent>,
 }
 
 impl TextField {
@@ -48,35 +46,19 @@ impl TextField {
             cursor,
             input_position: 0,
             prefix: String::new(),
-            event_sender: None,
-            event_receiver: None,
-            user_input: None,
+            input_event: vec![],
         })
     }
+
+    // pub fn init(&mut self, input_event: Box<Option<InputEvent>>) {
+    //     self.input_event = input_event;
+    // }
 
     fn cursor_on_first_subline(&self) -> bool {
         if let Some(last_line) = self.textdisplay.lines().last() {
             last_line.len() / self.textdisplay.get_line_width() == 0
         } else {
             false
-        }
-    }
-
-    fn move_cursor_to_end(&mut self) {
-        if self.textdisplay.get_line_width() == 0 {
-            return;
-        }
-        if let Some(current_line) = self.textdisplay.lines().last() {
-            // println!("line count: {}", self.textdisplay.get_lines_count());
-            let mut y = self.textdisplay.get_lines_count().saturating_sub(1);
-            if let Some(last_line) = self.textdisplay.lines().last() {
-                if last_line.len() == self.textdisplay.get_line_width() {
-                    y += 1;
-                }
-            }
-            // println!("y: {}", y);
-            self.cursor
-                .move_to((current_line.len() % self.textdisplay.get_line_width()) as u32, y as u32);
         }
     }
 
@@ -94,10 +76,7 @@ impl TextField {
 
     pub fn enter(&mut self) {
         if let Some(line) = self.textdisplay.lines().last() {
-            self.event_sender
-                .as_ref()
-                .unwrap()
-                .send(Event::InputEvent(InputEvent::UserText(line.clone())));
+            self.input_event.push(InputEvent::UserText(line.clone()));
         }
     }
 
@@ -123,7 +102,7 @@ impl TextField {
         self.cursor.render(gl);
     }
 
-    pub fn handle_event(&mut self, event: &glutin::event::Event<()>) {
+    pub fn handle_window_event(&mut self, event: &glutin::event::Event<()>) {
         if let glutin::event::Event::WindowEvent { event, .. } = event {
             match event {
                 WindowEvent::Resized(physical_size) => {
@@ -161,37 +140,49 @@ impl TextField {
                 _ => (),
             }
         }
-        self.handle_output_event();
     }
 
-    fn handle_output_event(&mut self) {
-        let r = self.event_receiver.as_ref().unwrap().lock().unwrap().try_recv();
-        if let Ok(event) = r {
-            // println!("{:?}", event);
+    pub fn handle_output_event(&mut self, event: OutputEvent) {
+        println!("{:?}", event);
 
-            if let Event::OutputEvent(oe) = event {
-                match oe {
-                    OutputEvent::Print(s) => {
-                        self.append(&s);
-                    }
-                    OutputEvent::InputPos(pos) => {
-                        self.input_position = pos;
-                    }
-                    OutputEvent::Newline => {
-                        self.newline();
-                    }
+        match event {
+            OutputEvent::Print(s) => {
+                self.append(&s);
+            }
+            OutputEvent::InputPos(pos) => {
+                self.input_position = pos;
+            }
+            OutputEvent::Newline => {
+                self.newline();
+            }
+        }
+    }
+
+    fn move_cursor_to_end(&mut self) {
+        if self.textdisplay.get_line_width() == 0 {
+            return;
+        }
+        if let Some(current_line) = self.textdisplay.lines().last() {
+            // println!("line count: {}", self.textdisplay.get_lines_count());
+            let mut y = self.textdisplay.get_lines_count().saturating_sub(1);
+            if let Some(last_line) = self.textdisplay.lines().last() {
+                if last_line.len() == self.textdisplay.get_line_width() {
+                    y += 1;
                 }
             }
-        };
+            // println!("y: {}", y);
+            self.cursor
+                .move_to((current_line.len() % self.textdisplay.get_line_width()) as u32, y as u32);
+        }
     }
 }
 
-impl EventActor for TextField {
-    fn set_event_sender(&mut self, event_sender: EventSender) {
-        self.event_sender = Some(event_sender);
-    }
+// impl EventActor for TextField {
+//     fn set_event_sender(&mut self, event_sender: EventSender) {
+//         self.event_sender = Some(event_sender);
+//     }
 
-    fn set_event_receiver(&mut self, event_receiver: Mutex<EventReceiver>) {
-        self.event_receiver = Some(event_receiver);
-    }
-}
+//     fn set_event_receiver(&mut self, event_receiver: Mutex<EventReceiver>) {
+//         self.event_receiver = Some(event_receiver);
+//     }
+// }
