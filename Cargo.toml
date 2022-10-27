@@ -1,0 +1,25 @@
+[package]
+name = "terminal-emulator"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
+[build-dependencies]
+walkdir = "2.3"
+
+[features]
+gl_debug = ["gl/debug"]
+
+[dependencies]
+gl = { path = "lib/gl" }
+render_gl_derive = { path = "lib/render_gl_derive" }
+glutin = "0.28.0"
+thiserror = "1.0"
+anyhow =  "1.0"
+vec-2-10-10-10 = "0.1.2"
+nalgebra = "0.30"
+image = "0.24.1"
+rusttype = "0.9.2"
+# tokio = { version = "1.21.2", features = ["full"] }
