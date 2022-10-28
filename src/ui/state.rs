@@ -45,12 +45,12 @@ impl State {
     pub fn update(&mut self, event: &glutin::event::Event<()>) {
         self.text_field.handle_window_event(event);
 
-        if let Some(e) = self.processor.next_event() {
-            self.text_field.handle_output_event(e);
+        for e in self.text_field.pop_events().into_iter() {
+            self.processor.update(e);
         }
 
-        if let Some(e) = self.text_field.next_event() {
-            self.processor.update(e);
+        for e in self.processor.pop_events().into_iter() {
+            self.text_field.handle_output_event(e);
         }
     }
 

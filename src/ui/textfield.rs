@@ -75,10 +75,6 @@ impl TextField {
         if self.cursor.x >= self.input_position {
             self.textdisplay.remove_last_char();
             self.move_cursor_to_end();
-
-            // if self.cursor_on_first_subline() {
-            //     self.input_position = self.prefix.len() as u32 + 1;
-            // }
         }
     }
 
@@ -149,12 +145,10 @@ impl TextField {
         }
     }
 
-    pub fn next_event(&mut self) -> Option<InputEvent> {
-        let e = self.input_event.first().cloned();
-        if e.is_some() {
-            self.input_event.remove(0);
-        }
-        e
+    pub fn pop_events(&mut self) -> Vec<InputEvent> {
+        let events = self.input_event.clone();
+        self.input_event.clear();
+        events
     }
 
     fn move_cursor_to_end(&mut self) {
@@ -169,7 +163,8 @@ impl TextField {
                     y += 1;
                 }
             }
-            // println!("y: {}", y);
+            // println!("x: {}", current_line.len() % self.textdisplay.get_line_width());
+            println!("y: {}", y);
             self.cursor
                 .move_to((current_line.len() % self.textdisplay.get_line_width()) as u32, y as u32);
         }

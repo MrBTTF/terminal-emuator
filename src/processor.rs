@@ -35,12 +35,10 @@ impl Processor {
         }
     }
 
-    pub fn next_event(&mut self) -> Option<OutputEvent> {
-        let e = self.output_event.first().cloned();
-        if e.is_some() {
-            self.output_event.remove(0);
-        }
-        e
+    pub fn pop_events(&mut self) -> Vec<OutputEvent> {
+        let events = self.output_event.clone();
+        self.output_event.clear();
+        events
     }
 
     fn process(&mut self, s: &str) {
