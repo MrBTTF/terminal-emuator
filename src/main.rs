@@ -2,7 +2,8 @@ pub mod graphics;
 pub mod render_gl;
 pub mod resources;
 pub mod ui;
-pub mod processor;
+// pub mod processor;
+pub mod shell;
 
 use glutin::event::{Event, WindowEvent};
 use glutin::event_loop::ControlFlow;
@@ -10,14 +11,12 @@ use glutin::window::WindowBuilder;
 use glutin::{Api, ContextBuilder};
 
 use nalgebra::Vector3;
-use processor::Processor;
 use render_gl::{ColorBuffer, Viewport};
 use resources::Resources;
-use ui::state::State;
+use shell::Shell;
+use ui::Ui;
 
 use std::path::Path;
-
-use ui::textfield::TextField;
 
 use anyhow::Result;
 
@@ -56,11 +55,15 @@ fn run() -> Result<()> {
 
     let res = Resources::from_relative_exe_path(Path::new("assets"))?;
 
-    let processor = Processor::new();
-    let text_field = TextField::new(&res, &gl, viewport.w as u32, viewport.h as u32)?;
-    let mut state = State::new(text_field, processor);
+    // let processor = Processor::new();
+    // let text_field = TextField::new(&res, &gl, viewport.w as u32, viewport.h as u32)?;
+    // let mut state = State::new(text_field, processor);
 
-    state.init();
+    // state.init();
+
+    let ui = Ui::new(&res, &gl, viewport.w as u32, viewport.h as u32)?;
+
+    let mut shell = Shell::new(ui)?;
 
     el.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
@@ -78,9 +81,9 @@ fn run() -> Result<()> {
             Event::RedrawRequested(_) => {}
             _ => (),
         }
-        state.update(&event);
+        shell.handle_event(&event);
         color_buffer.clear(&gl);
-        state.render(&gl);
+        shell.update();
 
         gl_context.swap_buffers().unwrap();
     });

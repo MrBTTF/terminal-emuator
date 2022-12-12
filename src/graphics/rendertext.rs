@@ -155,14 +155,14 @@ impl RenderText {
         self.texture.unbind();
     }
 
-    pub fn render(&self, gl: &gl::Gl) {
+    pub fn render(&self) {
         self.program.set_used();
 
         self.texture.bind();
         self.vao.bind();
 
         unsafe {
-            gl.DrawArrays(
+            self.gl.DrawArrays(
                 gl::TRIANGLES, // mode
                 0,             // starting index in the enabled arrays
                 6,             // number of indices to be rendered
