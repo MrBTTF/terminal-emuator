@@ -1,13 +1,4 @@
-use gl::Gl;
-use glutin::event::{ElementState, KeyboardInput, VirtualKeyCode, WindowEvent};
-
-use crate::{
-    resources::Resources,
-    ui::{
-        textdisplay::{Buffer, TextDisplay},
-        Ui,
-    },
-};
+use crate::ui::{textdisplay::Buffer, Ui};
 
 #[derive(Copy, Clone)]
 pub enum Event {
@@ -56,7 +47,6 @@ impl Shell {
                 self.input.clear();
                 self.draw_buffer();
             }
-            _ => (),
         }
     }
 

@@ -1,6 +1,3 @@
-use gl::Gl;
-use glutin::event::WindowEvent;
-
 use crate::{graphics::cursor::Cursor, resources::Resources, shell::Event};
 
 use self::textdisplay::{Buffer, TextDisplay};
