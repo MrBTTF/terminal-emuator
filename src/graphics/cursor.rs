@@ -21,6 +21,7 @@ struct Vertex {
 }
 
 pub struct Cursor {
+    gl: gl::Gl,
     program: render_gl::Program,
     _vbo: buffer::ArrayBuffer, // _ to disable warning about not used vbo
     vao: buffer::VertexArray,
@@ -90,6 +91,7 @@ impl Cursor {
             .append_nonuniform_scaling(&Vector3::new(1.0, -1.0, 0.0));
 
         Ok(Cursor {
+            gl: gl.clone(),
             program,
             _vbo: vbo,
             vao,
@@ -133,14 +135,14 @@ impl Cursor {
         ));
     }
 
-    pub fn render(&self, gl: &gl::Gl) {
+    pub fn render(&self) {
         self.program.set_used();
 
         self.program.set_matrix("to_screen", self.to_screen);
         self.program.set_matrix("model", self.model);
         self.vao.bind();
         unsafe {
-            gl.DrawArrays(
+            self.gl.DrawArrays(
                 gl::TRIANGLES, // mode
                 0,             // starting index in the enabled arrays
                 6,             // number of indices to be rendered

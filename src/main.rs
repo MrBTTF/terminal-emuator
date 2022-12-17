@@ -5,7 +5,7 @@ pub mod ui;
 // pub mod processor;
 pub mod shell;
 
-use glutin::event::{Event, WindowEvent};
+use glutin::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
 use glutin::event_loop::ControlFlow;
 use glutin::window::WindowBuilder;
 use glutin::{Api, ContextBuilder};
@@ -55,12 +55,6 @@ fn run() -> Result<()> {
 
     let res = Resources::from_relative_exe_path(Path::new("assets"))?;
 
-    // let processor = Processor::new();
-    // let text_field = TextField::new(&res, &gl, viewport.w as u32, viewport.h as u32)?;
-    // let mut state = State::new(text_field, processor);
-
-    // state.init();
-
     let ui = Ui::new(&res, &gl, viewport.w as u32, viewport.h as u32)?;
 
     let mut shell = Shell::new(ui)?;
@@ -74,14 +68,46 @@ fn run() -> Result<()> {
                 WindowEvent::Resized(physical_size) => {
                     viewport.update_size(physical_size.width as i32, physical_size.height as i32);
                     viewport.set_used(&gl);
+
+                    shell.handle_event(shell::Event::Resized(
+                        physical_size.width,
+                        physical_size.height,
+                    ));
                 }
                 WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+                WindowEvent::ReceivedCharacter(c) => {
+                    // println!("{}, {:#?}", c, c);
+                    match c {
+                        '\u{8}' | '\r' => (), //backspace
+                        _ => {
+                            shell.handle_event(shell::Event::ReceivedCharacter(*c));
+                        }
+                    }
+                }
+                WindowEvent::KeyboardInput {
+                    device_id: _,
+                    input:
+                        KeyboardInput {
+                            state: ElementState::Pressed,
+                            virtual_keycode: Some(keycode),
+                            ..
+                        },
+                    is_synthetic: _,
+                } => {
+                    match keycode {
+                        VirtualKeyCode::Back => {
+                            shell.handle_event(shell::Event::Backspace);
+                        }
+                        VirtualKeyCode::Return | VirtualKeyCode::NumpadEnter => {
+                            shell.handle_event(shell::Event::Enter);
+                        }
+                        _ => (),
+                    };
+                }
                 _ => (),
             },
-            Event::RedrawRequested(_) => {}
             _ => (),
         }
-        shell.handle_event(&event);
         color_buffer.clear(&gl);
         shell.update();
 

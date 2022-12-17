@@ -19,7 +19,7 @@ impl Buffer {
         Buffer { content: history }
     }
 
-    fn fit_in_screen(&mut self, line_width: usize) -> Vec<String> {
+    fn fit_in_screen(&self, line_width: usize) -> Vec<String> {
         if line_width == 0 {
             return self.content.clone();
         }
@@ -38,25 +38,7 @@ impl Buffer {
             .collect()
     }
 
-    fn append(&mut self, s: &str) {
-        if let Some(current_line) = self.content.last_mut() {
-            current_line.push_str(s);
-        } else {
-            self.content.push(s.to_string());
-        }
-    }
-
-    fn newline(&mut self) {
-        self.content.push(String::new());
-    }
-
-    fn pop(&mut self) {
-        if let Some(current_line) = self.content.last_mut() {
-            current_line.pop();
-        }
-    }
-
-    fn content(&self) -> &Vec<String> {
+    pub fn content(&self) -> &Vec<String> {
         &self.content
     }
 }
@@ -91,14 +73,17 @@ impl TextDisplay {
         self.lines_to_display = (height as u32 / self.rendertext.glyph_height) as usize;
     }
 
-    pub fn update(&mut self, buffer: &mut Buffer) {
-        let mut lines = buffer.fit_in_screen(self.line_width);
-        if let Some(last) = buffer.content().last() {
-            if last.is_empty() {
-                lines.push(String::new());
-            }
-        }
+    pub fn update(&mut self, buffer: &Buffer) {
+        // println!("buffer: {:#?}", buffer);
 
+        let mut lines = buffer.fit_in_screen(self.line_width);
+        // if let Some(last) = buffer.content().last() {
+        //     if last.is_empty() {
+        //         lines.push(String::new());
+        //     }
+        // }
+        // println!("lines: {:#?}", lines);
+        
         // Scrolling to bottom
         if lines.len() > self.lines_to_display {
             lines = lines[lines.len() - self.lines_to_display..].to_vec();
