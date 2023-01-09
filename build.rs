@@ -52,7 +52,7 @@ fn copy(from: &Path, to: &Path) {
                     .expect("failed to create target dir");
             } else {
                 fs::copy(entry.path(), &target_path)
-                    .expect(format!("failed to copy: {:?}", entry.path()).as_str());
+                    .unwrap_or_else(|_| panic!("failed to copy: {:?}", entry.path()));
             }
         }
     }

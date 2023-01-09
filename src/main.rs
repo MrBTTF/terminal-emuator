@@ -2,7 +2,7 @@ pub mod graphics;
 pub mod render_gl;
 pub mod resources;
 pub mod ui;
-// pub mod processor;
+pub mod processor;
 pub mod shell;
 
 use glutin::event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent};
@@ -16,6 +16,7 @@ use resources::Resources;
 use shell::Shell;
 use ui::Ui;
 
+use std::env;
 use std::path::Path;
 
 use anyhow::Result;
@@ -45,6 +46,8 @@ fn setup_gl() -> Result<(
 }
 
 fn run() -> Result<()> {
+    env::set_var("PYTHONPATH", "venv:scripts");
+
     let (gl, el, gl_context) = setup_gl()?;
 
     let mut viewport = Viewport::for_window(1024, 768);
@@ -100,6 +103,18 @@ fn run() -> Result<()> {
                         }
                         VirtualKeyCode::Return | VirtualKeyCode::NumpadEnter => {
                             shell.handle_event(shell::Event::Enter);
+                        }
+                        VirtualKeyCode::Left => {
+                            shell.handle_event(shell::Event::Left);
+                        }
+                        VirtualKeyCode::Right => {
+                            shell.handle_event(shell::Event::Right);
+                        }
+                        VirtualKeyCode::Up => {
+                            shell.handle_event(shell::Event::Previous);
+                        }
+                        VirtualKeyCode::Down => {
+                            shell.handle_event(shell::Event::Next);
                         }
                         _ => (),
                     };

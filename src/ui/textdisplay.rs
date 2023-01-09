@@ -4,9 +4,10 @@ use std::str;
 
 use crate::{graphics::rendertext::RenderText, resources::Resources};
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Buffer {
     content: Vec<String>,
+    input_size: usize,
 }
 
 impl Buffer {
@@ -16,7 +17,7 @@ impl Buffer {
         } else {
             history.push(input.to_string());
         }
-        Buffer { content: history }
+        Buffer { content: history, input_size: input.len() }
     }
 
     fn fit_in_screen(&self, line_width: usize) -> Vec<String> {
@@ -41,6 +42,10 @@ impl Buffer {
     pub fn content(&self) -> &Vec<String> {
         &self.content
     }
+
+    pub fn history(&self) -> &[String] {
+        &self.content[0..self.input_size]
+    }
 }
 
 pub struct TextDisplay {
@@ -48,7 +53,7 @@ pub struct TextDisplay {
     pub line_height: u32,
     line_width: usize,
     lines_count: usize,
-    lines_to_display: usize,
+    pub lines_to_display: usize,
 }
 
 impl TextDisplay {
@@ -69,8 +74,8 @@ impl TextDisplay {
 
     pub fn update_size(&mut self, width: i32, height: i32) {
         self.rendertext.update_size(width, height);
-        self.line_width = (width as u32 / self.rendertext.glyph_width) as usize;
-        self.lines_to_display = (height as u32 / self.rendertext.glyph_height) as usize;
+        self.line_width = (width as f32 / self.rendertext.glyph_width as f32).round() as usize;
+        self.lines_to_display = (height as f32 / self.rendertext.glyph_height as f32).round() as usize;
     }
 
     pub fn update(&mut self, buffer: &Buffer) {
@@ -83,7 +88,7 @@ impl TextDisplay {
         //     }
         // }
         // println!("lines: {:#?}", lines);
-        
+
         // Scrolling to bottom
         if lines.len() > self.lines_to_display {
             lines = lines[lines.len() - self.lines_to_display..].to_vec();

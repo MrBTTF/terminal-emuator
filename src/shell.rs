@@ -1,4 +1,7 @@
-use crate::ui::{textdisplay::Buffer, Ui};
+use crate::{
+    processor::process,
+    ui::{textdisplay::Buffer, Ui},
+};
 
 #[derive(Copy, Clone)]
 pub enum Event {
@@ -6,17 +9,32 @@ pub enum Event {
     ReceivedCharacter(char),
     Backspace,
     Enter,
+    Left,
+    Right,
+    Previous,
+    Next,
 }
 
 pub struct Shell {
     ui: Ui,
     history: Vec<String>,
     input: String,
+    buffer: Buffer,
 }
 
 impl Shell {
     pub fn new(ui: Ui) -> Result<Self, anyhow::Error> {
-        anyhow::Ok(Shell { ui, history: Vec::new(), input: String::new() })
+        let username = "user".to_string();
+        let directory = "/".to_string();
+        let mut shell = Shell {
+            ui,
+            history: vec![format!("{}:{}$ ", username, directory)],
+            input: String::new(),
+            buffer: Buffer::default(),
+        };
+        shell.draw_buffer();
+        shell.move_cursor_to_end();
+        anyhow::Ok(shell)
     }
 
     pub fn handle_event(&mut self, event: Event) {
@@ -26,12 +44,12 @@ impl Shell {
                 self.draw_buffer();
             }
             Event::ReceivedCharacter(c) => {
-                // println!("{}, {:#?}", c, c);
                 self.input.push(c);
+                self.shift_cursor(1);
                 self.draw_buffer();
-                // println!("{:#?}", &self.input);
             }
             Event::Backspace => {
+                self.shift_cursor(-1);
                 self.input.pop();
                 self.draw_buffer();
             }
@@ -46,8 +64,14 @@ impl Shell {
 
                 self.input.clear();
                 self.draw_buffer();
+                self.move_cursor_to_end();
             }
+            Event::Left => self.shift_cursor(-1),
+            Event::Right => self.shift_cursor(1),
+            Event::Previous => self.previous_input(),
+            Event::Next => self.next_input(),
         }
+        self.ui.update_cursor(&self.history);
     }
 
     pub fn update(&mut self) {
@@ -56,10 +80,21 @@ impl Shell {
 
     fn draw_buffer(&mut self) {
         let buffer = Buffer::new(self.history.clone(), &self.input);
-        // println!("{:#?}", self.history);
-        // println!("{:#?}", self.input);
-        self.ui.update(&buffer);
+        self.ui.update_text(&buffer);
     }
+
+    fn shift_cursor(&mut self, shift: i32) {
+        self.ui.shift_cursor(shift, self.input.len());
+    }
+
+    fn move_cursor_to_end(&mut self) {
+        self.shift_cursor(self.input.len() as i32);
+        dbg!(self.ui.cursor_position);
+    }
+
+    fn previous_input(&mut self) {}
+
+    fn next_input(&mut self) {}
 
     fn process_cmd(&self, input: &str) -> Vec<String> {
         let mut output = vec![];
@@ -67,23 +102,31 @@ impl Shell {
         let mut input_splitted = input.split_whitespace();
         if let Some(cmd) = input_splitted.next() {
             let args = input_splitted;
-            println!("cmd: {}", cmd);
-            // println!("args: {:?}", args);
+            dbg!(cmd);
             match cmd {
-                "echo" => output = vec![args.fold(String::new(), |r, c| r + c + " ")],
+                "echo" => {
+                    output = vec![args.fold(String::new(), |r, c| r + c + " ")];
+                    output.push(String::new());
+                }
                 "ls" => {
-                    output = vec!["bin    dev    usr".to_string()];
+                    output = vec!["bin    dev    usr\n".to_string()];
+                    output.push(String::new());
                 }
                 _ => {
-                    output = vec![format!("Command '{cmd}' not found")];
+                    // output = process(input);
+                    output = vec![format!("Command '{cmd}' not found"), String::new()];
                 }
             }
+        } else {
+            output.push(String::new());
         }
 
         let username = "user".to_string();
         let directory = "/".to_string();
         let cwd = format!("{}:{}$ ", username, directory);
-        output.push(cwd);
+        if let Some(last) = output.last_mut() {
+            last.push_str(&cwd);
+        }
         output
     }
 }
