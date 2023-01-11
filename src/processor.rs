@@ -1,5 +1,5 @@
 use pyo3::prelude::*;
-use std::str;
+use std::{env, str};
 
 #[pyclass]
 #[derive(Default)]
@@ -18,8 +18,10 @@ impl LoggingStdout {
 }
 
 pub fn process(cmd: &str) -> Vec<String> {
+    env::set_var("PYTHONPATH", "python-lib:venv");
     Python::with_gil(|py| -> PyResult<Vec<String>> {
         let sys = py.import("sys")?;
+        // PyModule::from_code(py, include_str!("../python-lib/main.py"), "main.py", "python-lib")?;
         sys.setattr("stdout", LoggingStdout::default().into_py(py))?;
         match py.run(cmd, None, None) {
             Ok(_) => (),

@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use anyhow::Ok;
 use nalgebra::{Matrix4, Vector3};
 use render_gl_derive::VertexAttribPointers;

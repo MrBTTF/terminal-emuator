@@ -1,5 +1,3 @@
-use std::time::Instant;
-
 use crate::{
     processor::process,
     ui::{textdisplay::Buffer, Ui},
@@ -22,6 +20,8 @@ pub struct Shell {
     ui: Ui,
     history: Vec<String>,
     input: String,
+    cmd_history: Vec<String>,
+    cmd_pointer: usize,
 }
 
 impl Shell {
@@ -32,6 +32,8 @@ impl Shell {
             ui,
             history: vec![format!("{}:{}$ ", username, directory)],
             input: String::new(),
+            cmd_history: vec![],
+            cmd_pointer: 0,
         };
         shell.draw_buffer();
         shell.move_cursor_to_end();
@@ -60,6 +62,8 @@ impl Shell {
                 } else {
                     self.history.push(self.input.clone());
                 }
+                self.cmd_history.push(self.input.clone());
+                self.cmd_pointer += 1;
                 let output = self.process_cmd(&self.input);
                 self.history.extend(output);
 
@@ -93,9 +97,25 @@ impl Shell {
         self.shift_cursor(self.input.len() as i32);
     }
 
-    fn previous_input(&mut self) {}
+    fn previous_input(&mut self) {
+        if self.cmd_pointer == 0 {
+            return;
+        }
+        self.cmd_pointer -= 1;
+        self.input = self.cmd_history[self.cmd_pointer].clone();
+        self.draw_buffer();
+        self.move_cursor_to_end();
+    }
 
-    fn next_input(&mut self) {}
+    fn next_input(&mut self) {
+        if self.cmd_pointer == self.cmd_history.len() - 1 {
+            return;
+        }
+        self.cmd_pointer += 1;
+        self.input = self.cmd_history[self.cmd_pointer].clone();
+        self.draw_buffer();
+        self.move_cursor_to_end();
+    }
 
     fn process_cmd(&self, input: &str) -> Vec<String> {
         let mut output = vec![];
@@ -114,8 +134,8 @@ impl Shell {
                     output.push(String::new());
                 }
                 _ => {
-                    // output = process(input);
-                    output = vec![format!("Command '{cmd}' not found"), String::new()];
+                    output = process(input);
+                    // output = vec![format!("Command '{cmd}' not found"), String::new()];
                 }
             }
         } else {

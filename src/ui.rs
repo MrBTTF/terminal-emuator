@@ -1,7 +1,5 @@
 use std::time::Instant;
 
-use nalgebra::ComplexField;
-
 use crate::{graphics::cursor::Cursor, resources::Resources, shell::Event};
 
 use self::textdisplay::{Buffer, TextDisplay};
@@ -124,10 +122,13 @@ impl Ui {
         };
 
         let mut history_last_line_y = history.iter().fold(history.len() - 1, |acc, s| {
+            // let line_length = s.len();
+            // let line_width = line_width as usize;
             // dbg!(acc);
-            // dbg!(s.len());
-            // dbg!((line_width as usize));
-            acc + s.len() / (line_width as usize)
+            // dbg!(line_length);
+            // dbg!(line_width);
+            // dbg!((line_length - 1.) / (line_width));
+            acc + ((s.len() - 1) / (line_width as usize))
         }); // Adding remainder of each row if it's longer than line width
 
         // dbg!(self.textdisplay.lines_to_display);
