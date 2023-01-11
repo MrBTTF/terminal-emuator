@@ -1,9 +1,11 @@
+use std::time::Instant;
+
 use crate::{
     processor::process,
     ui::{textdisplay::Buffer, Ui},
 };
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Event {
     Resized(u32, u32),
     ReceivedCharacter(char),
@@ -13,13 +15,13 @@ pub enum Event {
     Right,
     Previous,
     Next,
+    Release,
 }
 
 pub struct Shell {
     ui: Ui,
     history: Vec<String>,
     input: String,
-    buffer: Buffer,
 }
 
 impl Shell {
@@ -30,7 +32,6 @@ impl Shell {
             ui,
             history: vec![format!("{}:{}$ ", username, directory)],
             input: String::new(),
-            buffer: Buffer::default(),
         };
         shell.draw_buffer();
         shell.move_cursor_to_end();
@@ -70,6 +71,7 @@ impl Shell {
             Event::Right => self.shift_cursor(1),
             Event::Previous => self.previous_input(),
             Event::Next => self.next_input(),
+            _ => (),
         }
         self.ui.update_cursor(&self.history);
     }
@@ -89,7 +91,6 @@ impl Shell {
 
     fn move_cursor_to_end(&mut self) {
         self.shift_cursor(self.input.len() as i32);
-        dbg!(self.ui.cursor_position);
     }
 
     fn previous_input(&mut self) {}

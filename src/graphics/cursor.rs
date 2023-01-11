@@ -28,8 +28,8 @@ pub struct Cursor {
     _vbo: buffer::ArrayBuffer, // _ to disable warning about not used vbo
     vao: buffer::VertexArray,
 
-    pub x: u32,
-    pub y: u32,
+    x: u32,
+    y: u32,
     width: f32,
     height: f32,
     field_width: f32,
@@ -37,8 +37,6 @@ pub struct Cursor {
 
     to_screen: Matrix4<f32>,
     model: Matrix4<f32>,
-
-    now: Instant,
 }
 
 impl Cursor {
@@ -107,7 +105,6 @@ impl Cursor {
             model: Matrix4::identity(),
             x: 0,
             y: 0,
-            now: Instant::now(),
         })
     }
 
@@ -141,13 +138,6 @@ impl Cursor {
     }
 
     pub fn render(&mut self) {
-        let duration = self.now.elapsed();
-        if duration.as_millis() > 1000 {
-            self.now = Instant::now();
-        } else if duration.as_millis() > 700 {
-            return;
-        }
-
         self.program.set_used();
 
         self.program.set_matrix("to_screen", self.to_screen);

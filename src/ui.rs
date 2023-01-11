@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use nalgebra::ComplexField;
 
 use crate::{graphics::cursor::Cursor, resources::Resources, shell::Event};
@@ -13,10 +15,20 @@ const GREEN: (u8, u8, u8, u8) = (0, 227, 48, 255);
 //     InputEvent,
 // }
 
+#[derive(Debug)]
+enum CursorState {
+    Visible,
+    Blinking,
+    TriggeredBlinking,
+}
+
 pub struct Ui {
     textdisplay: TextDisplay,
     cursor: Cursor,
-    pub cursor_position: usize,
+    cursor_position: usize,
+    cursor_state: CursorState,
+
+    last_press: Instant,
 }
 
 impl Ui {
@@ -38,7 +50,13 @@ impl Ui {
             color,
         )?;
 
-        anyhow::Ok(Ui { textdisplay, cursor, cursor_position: 0 })
+        anyhow::Ok(Ui {
+            textdisplay,
+            cursor,
+            cursor_position: 0,
+            cursor_state: CursorState::Blinking,
+            last_press: Instant::now(),
+        })
     }
 
     pub fn handle_event(&mut self, event: Event) {
@@ -46,7 +64,8 @@ impl Ui {
             Event::Resized(width, height) => {
                 self.update_size(width as i32, height as i32);
             }
-            _ => (),
+            Event::Release => self.cursor_state = CursorState::TriggeredBlinking,
+            _ => self.cursor_state = CursorState::Visible,
         }
     }
 
@@ -56,7 +75,28 @@ impl Ui {
 
     pub fn render(&mut self) {
         self.textdisplay.render();
-        self.cursor.render();
+
+        match self.cursor_state {
+            CursorState::Visible => {
+                self.last_press = Instant::now();
+                self.cursor.render()
+            }
+            CursorState::Blinking => {
+                let duration = self.last_press.elapsed();
+                if duration.as_millis() < 400 {
+                    self.cursor.render();
+                } else if duration.as_millis() > 1000 {
+                    self.last_press = Instant::now();
+                }
+            }
+            CursorState::TriggeredBlinking => {
+                let duration = self.last_press.elapsed();
+                if duration.as_millis() > 500 {
+                    self.cursor_state = CursorState::Blinking;
+                }
+                self.cursor.render()
+            }
+        }
     }
 
     pub fn shift_cursor(&mut self, shift: i32, input_size: usize) {
@@ -70,8 +110,8 @@ impl Ui {
         } else if cursor_position >= 0 {
             self.cursor_position = cursor_position as usize;
         }
-        dbg!(input_size);
-        dbg!(cursor_position);
+        // dbg!(input_size);
+        // dbg!(cursor_position);
     }
 
     pub fn update_cursor(&mut self, history: &[String]) {
@@ -83,30 +123,28 @@ impl Ui {
             0
         };
 
-        let mut history_last_line_y = history
-            .iter()
-            .fold(history.len() - 1, |acc, s| {
-                // dbg!(acc);
-                // dbg!(s.len());
-                // dbg!((line_width as usize));
-                acc + s.len() / (line_width as usize)
-            }); // Adding remainder of each row if it's longer than line width
+        let mut history_last_line_y = history.iter().fold(history.len() - 1, |acc, s| {
+            // dbg!(acc);
+            // dbg!(s.len());
+            // dbg!((line_width as usize));
+            acc + s.len() / (line_width as usize)
+        }); // Adding remainder of each row if it's longer than line width
 
-        dbg!(self.textdisplay.lines_to_display);
-        if history_last_line_y > self.textdisplay.lines_to_display - 1  {
+        // dbg!(self.textdisplay.lines_to_display);
+        if history_last_line_y > self.textdisplay.lines_to_display - 1 {
             history_last_line_y = self.textdisplay.lines_to_display - 1
         }
         let last_line_width = history_last_line_width + self.cursor_position;
         let new_x = last_line_width % line_width;
         let new_y = history_last_line_y + (last_line_width) / line_width;
 
-        dbg!(self.cursor_position);
-        dbg!(line_width);
-        dbg!(history_last_line_width);
-        dbg!(history_last_line_y);
-        dbg!(last_line_width);
-        dbg!(new_x);
-        dbg!(new_y);
+        // dbg!(self.cursor_position);
+        // dbg!(line_width);
+        // dbg!(history_last_line_width);
+        // dbg!(history_last_line_y);
+        // dbg!(last_line_width);
+        // dbg!(new_x);
+        // dbg!(new_y);
 
         self.cursor.move_to(new_x as u32, new_y as u32);
     }
@@ -114,24 +152,5 @@ impl Ui {
     fn update_size(&mut self, width: i32, height: i32) {
         self.textdisplay.update_size(width, height);
         self.cursor.update_size(width as f32, height as f32);
-    }
-
-    pub fn move_cursor_to_end(&mut self, buffer: &Buffer) {
-        if self.textdisplay.get_line_width() == 0 {
-            return;
-        }
-        if let Some(current_line) = buffer.content().last() {
-            // println!("line count: {}", self.textdisplay.get_lines_count());
-            let mut y = self.textdisplay.get_lines_count().saturating_sub(1);
-            if !current_line.is_empty()
-                && current_line.len() % self.textdisplay.get_line_width() == 0
-            {
-                y += 1;
-            }
-            // println!("x: {}", current_line.len() % self.textdisplay.get_line_width());
-            // println!("y: {}", y);
-            self.cursor
-                .move_to((current_line.len() % self.textdisplay.get_line_width()) as u32, y as u32);
-        }
     }
 }

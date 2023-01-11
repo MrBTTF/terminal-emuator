@@ -119,6 +119,18 @@ fn run() -> Result<()> {
                         _ => (),
                     };
                 }
+                WindowEvent::KeyboardInput {
+                    device_id: _,
+                    input:
+                        KeyboardInput {
+                            state: ElementState::Released,
+                            // virtual_keycode: Some(keycode),
+                            ..
+                        },
+                    is_synthetic: _,
+                } => {
+                    shell.handle_event(shell::Event::Release);
+                }
                 _ => (),
             },
             _ => (),
