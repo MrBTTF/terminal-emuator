@@ -128,7 +128,7 @@ impl Ui {
             // dbg!(line_length);
             // dbg!(line_width);
             // dbg!((line_length - 1.) / (line_width));
-            acc + ((s.len() - 1) / (line_width as usize))
+            acc + ((s.len().wrapping_sub(1)) / (line_width as usize))
         }); // Adding remainder of each row if it's longer than line width
 
         // dbg!(self.textdisplay.lines_to_display);

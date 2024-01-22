@@ -41,7 +41,7 @@ impl From<(f32, f32, f32)> for f32_f32_f32 {
 #[derive(Copy, Clone, Debug)]
 #[repr(C, packed)]
 pub struct u2_u10_u10_u10_rev_float {
-    pub inner: ::vec_2_10_10_10::Vector,
+    pub inner: u32,
 }
 
 impl u2_u10_u10_u10_rev_float {
@@ -66,9 +66,17 @@ impl u2_u10_u10_u10_rev_float {
 
 impl From<(f32, f32, f32, f32)> for u2_u10_u10_u10_rev_float {
     fn from(other: (f32, f32, f32, f32)) -> Self {
-        u2_u10_u10_u10_rev_float {
-            inner: ::vec_2_10_10_10::Vector::new(other.0, other.1, other.2, other.3),
-        }
+        let x = (other.0 * 1023f32).round() as u32;
+        let y = (other.1 * 1023f32).round() as u32;
+        let z = (other.2 * 1023f32).round() as u32;
+        let w = (other.3 * 3f32).round() as u32;
+
+        let mut c: u32 = 0;
+        c |= w << 30;
+        c |= z << 20;
+        c |= y << 10;
+        c |= x;
+        u2_u10_u10_u10_rev_float { inner: c }
     }
 }
 
