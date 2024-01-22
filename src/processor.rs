@@ -1,4 +1,4 @@
-use pyo3::prelude::*;
+use pyo3::{prelude::*, types::IntoPyDict};
 use std::{env, str};
 
 #[pyclass]
@@ -18,17 +18,26 @@ impl LoggingStdout {
 }
 
 pub fn process(cmd: &str) -> Vec<String> {
-    env::set_var("PYTHONPATH", "python-lib:venv");
+    env::set_var("PYTHONPATH", "./:venv");
     Python::with_gil(|py| -> PyResult<Vec<String>> {
         let sys = py.import("sys")?;
-        // PyModule::from_code(py, include_str!("../python-lib/main.py"), "main.py", "python-lib")?;
+
+        let python_lib = py.import("python-lib")?;
+        let locals = Some(python_lib.dict());
+
         sys.setattr("stdout", LoggingStdout::default().into_py(py))?;
-        match py.run(cmd, None, None) {
-            Ok(_) => (),
+        let result = match py.eval(cmd, None, locals) {
+            Ok(result) => result,
             Err(e) => return Ok(vec![e.to_string(), String::new()]),
-        }
+        };
+        println!("{}", result);
         let get_stdout: Py<PyAny> = sys.getattr("stdout")?.getattr("get_stdout")?.into();
-        let stdout: Vec<String> = get_stdout.call0(py)?.extract(py)?;
+        let mut stdout: Vec<String> = get_stdout.call0(py)?.extract(py)?;
+        stdout.pop();
+        if !result.is_none() {
+            stdout.push(result.to_string());
+        }
+        stdout.push(String::new());
         dbg!(stdout.clone());
         Ok(stdout)
     })

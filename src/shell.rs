@@ -22,6 +22,7 @@ pub struct Shell {
     input: String,
     cmd_history: Vec<String>,
     cmd_pointer: usize,
+    cursor_pos: usize,
 }
 
 impl Shell {
@@ -34,6 +35,7 @@ impl Shell {
             input: String::new(),
             cmd_history: vec![],
             cmd_pointer: 0,
+            cursor_pos: 0,
         };
         shell.draw_buffer();
         shell.move_cursor_to_end();
@@ -47,14 +49,16 @@ impl Shell {
                 self.draw_buffer();
             }
             Event::ReceivedCharacter(c) => {
-                self.input.push(c);
+                self.input.insert(self.cursor_pos, c);
                 self.shift_cursor(1);
                 self.draw_buffer();
             }
             Event::Backspace => {
-                self.shift_cursor(-1);
-                self.input.pop();
-                self.draw_buffer();
+                if self.cursor_pos > 0 {
+                    self.shift_cursor(-1);
+                    self.input.remove(self.cursor_pos);
+                    self.draw_buffer();
+                }
             }
             Event::Enter => {
                 if let Some(last) = self.history.last_mut() {
@@ -90,6 +94,10 @@ impl Shell {
     }
 
     fn shift_cursor(&mut self, shift: i32) {
+        self.cursor_pos = self.cursor_pos.saturating_add_signed(shift as isize);
+        if self.cursor_pos > self.input.len() {
+            self.cursor_pos = self.input.len();
+        }
         self.ui.shift_cursor(shift, self.input.len());
     }
 
